@@ -1,0 +1,154 @@
+{
+  "info": {
+    "name": "DTSC 3601 Assignment 4 - Financial Ratio Similarity",
+    "description": "Tests against the live Modal deployment of the financial-ratio similarity FastAPI service.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://dvnzil--dtsc3601-financial-similarity-fastapi-app.modal.run"
+    }
+  ],
+  "item": [
+    {
+      "name": "Pipeline Info",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/info",
+          "host": ["{{base_url}}"],
+          "path": ["info"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has metadata fields', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body).to.have.property('steps');",
+              "    pm.expect(body).to.have.property('n_companies');",
+              "    pm.expect(body).to.have.property('sklearn_version');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/info",
+          "host": ["{{base_url}}"],
+          "path": ["info"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST /similar - valid",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"Total current assets\": 1000,\n  \"Total assets\": 5000,\n  \"Total current liabilities\": 500,\n  \"Total liabilities\": 2000,\n  \"Total debt\": 1500,\n  \"Total shareholders equity\": 3000,\n  \"Revenue\": 4000,\n  \"Net Income\": 500\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/similar",
+          "host": ["{{base_url}}"],
+          "path": ["similar"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has results array with tickers and distances', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body).to.have.property('results');",
+              "    pm.expect(body.results).to.be.an('array').that.is.not.empty;",
+              "    pm.expect(body.results[0]).to.have.property('ticker');",
+              "    pm.expect(body.results[0]).to.have.property('distance');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST /similar - invalid (missing fields, negative value)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"Total current assets\": -1\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/similar",
+          "host": ["{{base_url}}"],
+          "path": ["similar"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 422', function () {",
+              "    pm.response.to.have.status(422);",
+              "});",
+              "",
+              "pm.test('Response has validation error detail', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body).to.have.property('detail');",
+              "    pm.expect(body.detail).to.be.an('array').that.is.not.empty;",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
